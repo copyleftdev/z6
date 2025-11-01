@@ -197,6 +197,19 @@ pub fn build(b: *std.Build) void {
     integration_test_step.dependOn(&run_determinism_tests.step);
     test_step.dependOn(&run_determinism_tests.step); // Also run with unit tests
 
+    // Scheduler-Event integration test
+    const scheduler_event_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/integration/scheduler_event_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    scheduler_event_tests.root_module.addImport("z6", z6_module);
+    const run_scheduler_event_tests = b.addRunArtifact(scheduler_event_tests);
+    integration_test_step.dependOn(&run_scheduler_event_tests.step);
+    test_step.dependOn(&run_scheduler_event_tests.step); // Also run with unit tests
+
     // All tests
     const test_all_step = b.step("test-all", "Run all tests");
     test_all_step.dependOn(test_step);

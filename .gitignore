@@ -1,0 +1,53 @@
+# Zig
+zig-cache/
+zig-out/
+.zig-cache/
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Test artifacts
+*.test
+test-results/
+
+# Coverage
+*.profdata
+*.profraw
+coverage/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# Z6 specific
+results/
+test_results/
+*.log
+!firebase-debug.log
+
+# Fuzz artifacts
+fuzz-*.log
+crash-*
+leak-*
+timeout-*
+oom-*
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+.*.backup

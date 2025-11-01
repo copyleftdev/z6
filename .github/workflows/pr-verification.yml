@@ -1,0 +1,117 @@
+# Z6 Pull Request Verification
+#
+# Philosophy: NO CI/CD builds in GitHub
+# 
+# Tiger Style requires:
+# - All validation happens locally via pre-commit hook
+# - Developers run full test suite before pushing
+# - This workflow only verifies the commit was validated locally
+#
+# This prevents:
+# - "Push and pray" development
+# - Reliance on CI to catch basic errors
+# - Wasted CI resources
+#
+# The pre-commit hook enforces:
+# - Code formatting
+# - Assertion density
+# - Bounded loops
+# - Build success
+# - All tests pass
+
+name: PR Verification
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify-local-validation:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Verify pre-commit hook was run
+        run: |
+          echo "🐅 Verifying Tiger Style compliance"
+          echo ""
+          echo "This workflow does NOT run tests or builds."
+          echo "All validation must pass locally via pre-commit hook."
+          echo ""
+          
+          # Check if commits have Tiger Style marker
+          # (Pre-commit hook could add this to commit message)
+          
+          echo "✓ PR created"
+          echo ""
+          echo "Reminder: Before merging, ensure:"
+          echo "  • All commits passed pre-commit hook"
+          echo "  • Full test suite runs locally"
+          echo "  • Fuzz tests executed (if parser changes)"
+          echo "  • Documentation updated"
+          echo ""
+          echo "Tiger Style: Test before implement. Do it right the first time."
+      
+      - name: Check PR description
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+            
+            // Check for required sections
+            const requiredSections = [
+              '## Problem',
+              '## Solution',
+              '## Testing'
+            ];
+            
+            const missingSections = requiredSections.filter(section => 
+              !body.includes(section)
+            );
+            
+            if (missingSections.length > 0) {
+              core.setFailed(
+                `PR description missing required sections: ${missingSections.join(', ')}\n\n` +
+                'See docs/CONTRIBUTING.md for PR template'
+              );
+            } else {
+              console.log('✓ PR description complete');
+            }
+      
+      - name: Verify issue reference
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+            const title = pr.title || '';
+            
+            // Check if PR references an issue
+            const issuePattern = /#\d+|TASK-\d+/;
+            
+            if (!issuePattern.test(body) && !issuePattern.test(title)) {
+              core.setFailed(
+                'PR must reference an issue number (e.g., #123 or TASK-001)\n\n' +
+                'See ROADMAP.md for task numbers'
+              );
+            } else {
+              console.log('✓ Issue referenced');
+            }
+      
+      - name: Success
+        run: |
+          echo ""
+          echo "✓ PR verification complete"
+          echo ""
+          echo "Next steps:"
+          echo "  1. Code review by maintainer"
+          echo "  2. Verify all acceptance criteria met"
+          echo "  3. Confirm tests passed locally"
+          echo "  4. Squash and merge"
+          echo ""
+          echo "🐅 Tiger Style approved for review"

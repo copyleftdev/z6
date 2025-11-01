@@ -156,7 +156,30 @@ Aim for >90% coverage:
 zig build test -Dcoverage
 ```
 
-### 5. Format Code
+### 5. Install Pre-Commit Hooks
+
+**REQUIRED:** Install Tiger Style pre-commit hooks:
+
+```bash
+./scripts/install-hooks.sh
+```
+
+The pre-commit hook automatically enforces:
+- **Code formatting** — Runs `zig fmt --check`
+- **Assertion density** — Minimum 2 per function
+- **Bounded loops** — No unbounded `while(true)` without markers
+- **Explicit errors** — No silent `catch {}` 
+- **Build success** — Runs `zig build`
+- **All tests pass** — Runs `zig build test`
+
+Hook execution time is < 30 seconds.
+
+**To bypass (NOT RECOMMENDED):**
+```bash
+git commit --no-verify
+```
+
+### 6. Format Code
 
 ```bash
 zig fmt src/
@@ -164,7 +187,7 @@ zig fmt src/
 
 Z6 uses standard Zig formatting. No custom style.
 
-### 6. Run Full Test Suite
+### 7. Run Full Test Suite
 
 ```bash
 # Unit tests
@@ -179,7 +202,7 @@ zig build fuzz --timeout 60
 
 All must pass.
 
-### 7. Commit
+### 8. Commit
 
 #### Commit Message Format
 
@@ -220,7 +243,7 @@ Fixes #42
 - Explain **why**, not just what
 - Keep commits small and focused
 
-### 8. Push and Create PR
+### 9. Push and Create PR
 
 ```bash
 git push origin fix/issue-123

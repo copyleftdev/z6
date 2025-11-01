@@ -5,6 +5,14 @@
 pub const Arena = @import("arena.zig").Arena;
 pub const Pool = @import("pool.zig").Pool;
 pub const Memory = @import("memory.zig").Memory;
+pub const PRNG = @import("prng.zig").PRNG;
+pub const VU = @import("vu.zig").VU;
+pub const VUState = @import("vu.zig").VUState;
+pub const Scheduler = @import("scheduler.zig").Scheduler;
+pub const SchedulerConfig = @import("scheduler.zig").SchedulerConfig;
+pub const EventQueue = @import("event_queue.zig").EventQueue;
+
+// Event model
 pub const Event = @import("event.zig").Event;
 pub const EventHeader = @import("event.zig").EventHeader;
 pub const EventType = @import("event.zig").EventType;
@@ -15,6 +23,3 @@ pub const EventLogHeader = @import("event_log.zig").Header;
 pub const EventLogFooter = @import("event_log.zig").Footer;
 pub const EVENT_LOG_MAGIC_NUMBER = @import("event_log.zig").MAGIC_NUMBER;
 pub const EVENT_LOG_MAX_EVENTS = @import("event_log.zig").MAX_EVENTS;
-
-// Future exports will go here:
-// pub const Scheduler = @import("scheduler.zig").Scheduler;

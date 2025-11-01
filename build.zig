@@ -97,6 +97,54 @@ pub fn build(b: *std.Build) void {
     const run_memory_tests = b.addRunArtifact(memory_tests);
     test_step.dependOn(&run_memory_tests.step);
 
+    // PRNG tests
+    const prng_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/prng_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    prng_tests.root_module.addImport("z6", z6_module);
+    const run_prng_tests = b.addRunArtifact(prng_tests);
+    test_step.dependOn(&run_prng_tests.step);
+
+    // VU tests
+    const vu_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/vu_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    vu_tests.root_module.addImport("z6", z6_module);
+    const run_vu_tests = b.addRunArtifact(vu_tests);
+    test_step.dependOn(&run_vu_tests.step);
+
+    // Scheduler tests
+    const scheduler_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/scheduler_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    scheduler_tests.root_module.addImport("z6", z6_module);
+    const run_scheduler_tests = b.addRunArtifact(scheduler_tests);
+    test_step.dependOn(&run_scheduler_tests.step);
+
+    // Event queue tests
+    const event_queue_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/event_queue_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    event_queue_tests.root_module.addImport("z6", z6_module);
+    const run_event_queue_tests = b.addRunArtifact(event_queue_tests);
+    test_step.dependOn(&run_event_queue_tests.step);
+
     // Event model tests
     const event_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -133,9 +181,21 @@ pub fn build(b: *std.Build) void {
     const run_fuzz_tests = b.addRunArtifact(fuzz_tests);
     test_step.dependOn(&run_fuzz_tests.step);
 
-    // Integration tests (placeholder for TASK-100+)
+    // Integration tests
     const integration_test_step = b.step("test-integration", "Run integration tests");
-    // TODO: Add integration tests when implemented
+
+    // Determinism integration test
+    const determinism_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/integration/determinism_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    determinism_tests.root_module.addImport("z6", z6_module);
+    const run_determinism_tests = b.addRunArtifact(determinism_tests);
+    integration_test_step.dependOn(&run_determinism_tests.step);
+    test_step.dependOn(&run_determinism_tests.step); // Also run with unit tests
 
     // All tests
     const test_all_step = b.step("test-all", "Run all tests");

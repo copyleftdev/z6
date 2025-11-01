@@ -133,6 +133,18 @@ pub fn build(b: *std.Build) void {
     const run_scheduler_tests = b.addRunArtifact(scheduler_tests);
     test_step.dependOn(&run_scheduler_tests.step);
 
+    // Event queue tests
+    const event_queue_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/event_queue_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    event_queue_tests.root_module.addImport("z6", z6_module);
+    const run_event_queue_tests = b.addRunArtifact(event_queue_tests);
+    test_step.dependOn(&run_event_queue_tests.step);
+
     // Integration tests
     const integration_test_step = b.step("test-integration", "Run integration tests");
 

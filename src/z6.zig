@@ -8,6 +8,8 @@ pub const Memory = @import("memory.zig").Memory;
 pub const PRNG = @import("prng.zig").PRNG;
 pub const VU = @import("vu.zig").VU;
 pub const VUState = @import("vu.zig").VUState;
+pub const Scheduler = @import("scheduler.zig").Scheduler;
+pub const SchedulerConfig = @import("scheduler.zig").SchedulerConfig;
 
 // TODO: Uncomment when TASK-100 is merged
 // pub const Event = @import("event.zig").Event;

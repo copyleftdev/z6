@@ -121,6 +121,18 @@ pub fn build(b: *std.Build) void {
     const run_vu_tests = b.addRunArtifact(vu_tests);
     test_step.dependOn(&run_vu_tests.step);
 
+    // Scheduler tests
+    const scheduler_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/scheduler_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    scheduler_tests.root_module.addImport("z6", z6_module);
+    const run_scheduler_tests = b.addRunArtifact(scheduler_tests);
+    test_step.dependOn(&run_scheduler_tests.step);
+
     // Integration tests (placeholder for TASK-100+)
     const integration_test_step = b.step("test-integration", "Run integration tests");
     // TODO: Add integration tests when implemented

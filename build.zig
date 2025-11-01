@@ -54,6 +54,49 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_unit_tests.step);
 
+    // Create z6 module for tests
+    const z6_module = b.createModule(.{
+        .root_source_file = b.path("src/z6.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Arena allocator tests
+    const arena_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/arena_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    arena_tests.root_module.addImport("z6", z6_module);
+    const run_arena_tests = b.addRunArtifact(arena_tests);
+    test_step.dependOn(&run_arena_tests.step);
+
+    // Pool allocator tests
+    const pool_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/pool_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    pool_tests.root_module.addImport("z6", z6_module);
+    const run_pool_tests = b.addRunArtifact(pool_tests);
+    test_step.dependOn(&run_pool_tests.step);
+
+    // Memory budget tests
+    const memory_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/memory_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    memory_tests.root_module.addImport("z6", z6_module);
+    const run_memory_tests = b.addRunArtifact(memory_tests);
+    test_step.dependOn(&run_memory_tests.step);
+
     // Integration tests (placeholder for TASK-100+)
     const integration_test_step = b.step("test-integration", "Run integration tests");
     // TODO: Add integration tests when implemented

@@ -1,0 +1,52 @@
+[debug] [2025-11-01T17:34:25.643Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-11-01T17:34:25.645Z] > authorizing via signed-in user (donj@zuub.com)
+[debug] [2025-11-01T17:34:25.659Z] Checked if tokens are valid: false, expires at: 1761978517661
+[debug] [2025-11-01T17:34:25.659Z] Checked if tokens are valid: false, expires at: 1761978517661
+[debug] [2025-11-01T17:34:25.659Z] > refreshing access token with scopes: []
+[debug] [2025-11-01T17:34:25.661Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-11-01T17:34:25.661Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-01T17:34:25.686Z] Checked if tokens are valid: false, expires at: 1761978517661
+[debug] [2025-11-01T17:34:25.686Z] Checked if tokens are valid: false, expires at: 1761978517661
+[debug] [2025-11-01T17:34:25.686Z] > refreshing access token with scopes: []
+[debug] [2025-11-01T17:34:25.687Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-11-01T17:34:25.687Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-01T17:34:25.688Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-11-01T17:34:25.688Z] > authorizing via signed-in user (donj@zuub.com)
+[debug] [2025-11-01T17:34:25.689Z] Checked if tokens are valid: false, expires at: 1761978517661
+[debug] [2025-11-01T17:34:25.689Z] Checked if tokens are valid: false, expires at: 1761978517661
+[debug] [2025-11-01T17:34:25.689Z] > refreshing access token with scopes: []
+[debug] [2025-11-01T17:34:25.689Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-11-01T17:34:25.689Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-01T17:34:25.690Z] Checked if tokens are valid: false, expires at: 1761978517661
+[debug] [2025-11-01T17:34:25.690Z] Checked if tokens are valid: false, expires at: 1761978517661
+[debug] [2025-11-01T17:34:25.690Z] > refreshing access token with scopes: []
+[debug] [2025-11-01T17:34:25.690Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-11-01T17:34:25.690Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-01T17:34:25.809Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-11-01T17:34:25.810Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-01T17:34:25.825Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseapphosting.googleapis.com [none]
+[debug] [2025-11-01T17:34:25.825Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/dev-zuub
+[debug] [2025-11-01T17:34:25.828Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-11-01T17:34:25.828Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-01T17:34:25.833Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseio.com [none]
+[debug] [2025-11-01T17:34:25.833Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseio.com x-goog-quota-user=projects/dev-zuub
+[debug] [2025-11-01T17:34:25.835Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-11-01T17:34:25.835Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-01T17:34:25.839Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseapphosting.googleapis.com [none]
+[debug] [2025-11-01T17:34:25.839Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseapphosting.googleapis.com x-goog-quota-user=projects/dev-zuub
+[debug] [2025-11-01T17:34:25.841Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-11-01T17:34:25.841Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-01T17:34:25.846Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseio.com [none]
+[debug] [2025-11-01T17:34:25.846Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseio.com x-goog-quota-user=projects/dev-zuub
+[debug] [2025-11-01T17:34:26.226Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseio.com 403
+[debug] [2025-11-01T17:34:26.226Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseio.com [omitted]
+[debug] [2025-11-01T17:34:26.227Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseio.com 403
+[debug] [2025-11-01T17:34:26.227Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseio.com [omitted]
+[debug] [2025-11-01T17:34:26.280Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseapphosting.googleapis.com 200
+[debug] [2025-11-01T17:34:26.280Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2025-11-01T17:34:26.291Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseapphosting.googleapis.com 200
+[debug] [2025-11-01T17:34:26.291Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/dev-zuub/services/firebaseapphosting.googleapis.com [omitted]
+[debug] [2025-11-01T17:34:26.292Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-11-01T17:34:26.292Z] > authorizing via signed-in user (donj@zuub.com)
+[debug] [2025-11-01T17:34:26.293Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-11-01T17:34:26.294Z] > authorizing via signed-in user (donj@zuub.com)

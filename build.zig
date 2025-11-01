@@ -145,6 +145,42 @@ pub fn build(b: *std.Build) void {
     const run_event_queue_tests = b.addRunArtifact(event_queue_tests);
     test_step.dependOn(&run_event_queue_tests.step);
 
+    // Event model tests
+    const event_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/event_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    event_tests.root_module.addImport("z6", z6_module);
+    const run_event_tests = b.addRunArtifact(event_tests);
+    test_step.dependOn(&run_event_tests.step);
+
+    // Event log tests
+    const event_log_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/event_log_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    event_log_tests.root_module.addImport("z6", z6_module);
+    const run_event_log_tests = b.addRunArtifact(event_log_tests);
+    test_step.dependOn(&run_event_log_tests.step);
+
+    // Fuzz tests
+    const fuzz_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/fuzz/event_serialization_fuzz.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    fuzz_tests.root_module.addImport("z6", z6_module);
+    const run_fuzz_tests = b.addRunArtifact(fuzz_tests);
+    test_step.dependOn(&run_fuzz_tests.step);
+
     // Integration tests
     const integration_test_step = b.step("test-integration", "Run integration tests");
 

@@ -12,17 +12,14 @@ pub const Scheduler = @import("scheduler.zig").Scheduler;
 pub const SchedulerConfig = @import("scheduler.zig").SchedulerConfig;
 pub const EventQueue = @import("event_queue.zig").EventQueue;
 
-// TODO: Uncomment when TASK-100 is merged
-// pub const Event = @import("event.zig").Event;
-// pub const EventHeader = @import("event.zig").EventHeader;
-// pub const EventType = @import("event.zig").EventType;
-// pub const EventLog = @import("event_log.zig").EventLog;
-//
-// // Event log constants and types
-// pub const EventLogHeader = @import("event_log.zig").Header;
-// pub const EventLogFooter = @import("event_log.zig").Footer;
-// pub const EVENT_LOG_MAGIC_NUMBER = @import("event_log.zig").MAGIC_NUMBER;
-// pub const EVENT_LOG_MAX_EVENTS = @import("event_log.zig").MAX_EVENTS;
+// Event model
+pub const Event = @import("event.zig").Event;
+pub const EventHeader = @import("event.zig").EventHeader;
+pub const EventType = @import("event.zig").EventType;
+pub const EventLog = @import("event_log.zig").EventLog;
 
-// Future exports will go here:
-// pub const Scheduler = @import("scheduler.zig").Scheduler;
+// Event log constants and types
+pub const EventLogHeader = @import("event_log.zig").Header;
+pub const EventLogFooter = @import("event_log.zig").Footer;
+pub const EVENT_LOG_MAGIC_NUMBER = @import("event_log.zig").MAGIC_NUMBER;
+pub const EVENT_LOG_MAX_EVENTS = @import("event_log.zig").MAX_EVENTS;

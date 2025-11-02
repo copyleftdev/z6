@@ -62,7 +62,7 @@ test "http1_handler: request serialization" {
         .method = .POST,
         .path = "/api/test",
         .headers = headers,
-        .body = "{\"test\":true}",
+        .body = "{\"test\":true}", // Optional body (non-null)
         .timeout_ns = 30_000_000_000,
     };
 

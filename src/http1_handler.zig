@@ -18,6 +18,8 @@
 const std = @import("std");
 const protocol = @import("protocol.zig");
 const http1_parser = @import("http1_parser.zig");
+const event_mod = @import("event.zig");
+const event_log_mod = @import("event_log.zig");
 
 const Allocator = std.mem.Allocator;
 const Target = protocol.Target;
@@ -30,6 +32,9 @@ const CompletionQueue = protocol.CompletionQueue;
 const ProtocolConfig = protocol.ProtocolConfig;
 const HTTPConfig = protocol.HTTPConfig;
 const HTTP1Parser = http1_parser.HTTP1Parser;
+const Event = event_mod.Event;
+const EventType = event_mod.EventType;
+const EventLog = event_log_mod.EventLog;
 
 /// Maximum connections in pool
 const MAX_CONNECTIONS = 10_000;
@@ -79,6 +84,7 @@ pub const HTTP1Handler = struct {
     pending_requests: std.ArrayList(PendingRequest),
     parser: HTTP1Parser,
     current_tick: u64, // Logical time
+    event_log: ?*EventLog, // Optional event logging
 
     /// Initialize handler
     pub fn init(allocator: Allocator, config: ProtocolConfig) !*HTTP1Handler {
@@ -100,6 +106,7 @@ pub const HTTP1Handler = struct {
             .pending_requests = try std.ArrayList(PendingRequest).initCapacity(allocator, 100),
             .parser = HTTP1Parser.init(allocator),
             .current_tick = 0,
+            .event_log = null, // Will be set via setEventLog()
         };
 
         // Initialize connections
@@ -120,6 +127,11 @@ pub const HTTP1Handler = struct {
         std.debug.assert(handler.next_conn_id > 0); // Valid ID counter
 
         return handler;
+    }
+
+    /// Set event log for event emission
+    pub fn setEventLog(self: *HTTP1Handler, event_log: *EventLog) void {
+        self.event_log = event_log;
     }
 
     /// Cleanup handler
@@ -183,6 +195,9 @@ pub const HTTP1Handler = struct {
         };
         self.connection_count += 1;
 
+        // Emit event
+        self.emitEvent(.conn_established, conn_id, 0);
+
         // Postconditions
         std.debug.assert(self.connections[slot].id == conn_id); // ID set
         std.debug.assert(self.connection_count <= MAX_CONNECTIONS); // Within limit
@@ -232,6 +247,9 @@ pub const HTTP1Handler = struct {
             .timeout_ns = request.timeout_ns,
         });
 
+        // Emit event
+        self.emitEvent(.request_issued, conn_id, request_id);
+
         // Postconditions
         std.debug.assert(request_id > 0); // Valid request ID
         std.debug.assert(conn.requests_sent <= MAX_REQUESTS_PER_CONNECTION); // Within limit
@@ -255,6 +273,7 @@ pub const HTTP1Handler = struct {
             const elapsed = self.current_tick - pending.sent_at_ns;
 
             if (elapsed > pending.timeout_ns) {
+                self.emitEvent(.request_timeout, pending.connection_id, pending.request_id);
                 try completions.append(self.allocator, Completion{
                     .request_id = pending.request_id,
                     .result = .{ .@"error" = error.RequestTimeout },
@@ -279,11 +298,13 @@ pub const HTTP1Handler = struct {
             const bytes_read = stream.read(&buffer) catch |err| {
                 // Connection error
                 if (self.findPendingRequest(conn.id)) |request_id| {
+                    self.emitEvent(.response_error, conn.id, request_id);
                     try completions.append(self.allocator, Completion{
                         .request_id = request_id,
                         .result = .{ .@"error" = err },
                     });
                 }
+                self.emitEvent(.conn_error, conn.id, 0);
                 conn.state = .closed;
                 if (conn.stream) |s| s.close();
                 conn.stream = null;
@@ -297,6 +318,7 @@ pub const HTTP1Handler = struct {
             const result = self.parser.parse(response_data) catch |err| {
                 // Parser error
                 if (self.findPendingRequest(conn.id)) |request_id| {
+                    self.emitEvent(.response_error, conn.id, request_id);
                     try completions.append(self.allocator, Completion{
                         .request_id = request_id,
                         .result = .{ .@"error" = err },
@@ -307,6 +329,7 @@ pub const HTTP1Handler = struct {
 
             // Success!
             if (self.findPendingRequest(conn.id)) |request_id| {
+                self.emitEvent(.response_received, conn.id, request_id);
                 const response = Response{
                     .request_id = request_id,
                     .status = .{ .success = result.status_code },
@@ -342,6 +365,7 @@ pub const HTTP1Handler = struct {
             if (conn.stream) |stream| {
                 stream.close();
             }
+            self.emitEvent(.conn_closed, conn_id, 0);
             conn.state = .closed;
             conn.stream = null;
             if (self.connection_count > 0) {
@@ -432,19 +456,23 @@ pub const HTTP1Handler = struct {
         pos += (try std.fmt.bufPrint(buffer[pos..], "Host: localhost\r\n", .{})).len;
 
         // Content-Length if body present
-        if (request.body.len > 0) {
-            pos += (try std.fmt.bufPrint(buffer[pos..], "Content-Length: {d}\r\n", .{
-                request.body.len,
-            })).len;
+        if (request.body) |body| {
+            if (body.len > 0) {
+                pos += (try std.fmt.bufPrint(buffer[pos..], "Content-Length: {d}\r\n", .{
+                    body.len,
+                })).len;
+            }
         }
 
         // End of headers
         pos += (try std.fmt.bufPrint(buffer[pos..], "\r\n", .{})).len;
 
         // Body
-        if (request.body.len > 0) {
-            @memcpy(buffer[pos .. pos + request.body.len], request.body);
-            pos += request.body.len;
+        if (request.body) |body| {
+            if (body.len > 0) {
+                @memcpy(buffer[pos .. pos + body.len], body);
+                pos += body.len;
+            }
         }
 
         // Postconditions
@@ -453,6 +481,16 @@ pub const HTTP1Handler = struct {
 
         _ = self; // Not using self currently
         return buffer[0..pos];
+    }
+
+    /// Emit event to event log (if set)
+    fn emitEvent(self: *HTTP1Handler, event_type: EventType, conn_id: ConnectionId, request_id: RequestId) void {
+        if (self.event_log) |event_log| {
+            var event = Event.init(event_type, self.current_tick);
+            event.connection_id = conn_id;
+            event.request_id = request_id;
+            event_log.append(event) catch {}; // Best-effort logging
+        }
     }
 };
 

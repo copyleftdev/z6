@@ -43,3 +43,8 @@ pub const ProtocolConfig = @import("protocol.zig").ProtocolConfig;
 pub const HTTPConfig = @import("protocol.zig").HTTPConfig;
 pub const HTTPVersion = @import("protocol.zig").HTTPVersion;
 pub const ProtocolHandler = @import("protocol.zig").ProtocolHandler;
+
+// HTTP/1.1 Parser
+pub const HTTP1Parser = @import("http1_parser.zig").HTTP1Parser;
+pub const ParseResult = @import("http1_parser.zig").ParseResult;
+pub const ParserError = @import("http1_parser.zig").ParserError;

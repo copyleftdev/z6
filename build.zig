@@ -220,6 +220,19 @@ pub fn build(b: *std.Build) void {
     // Integration tests
     const integration_test_step = b.step("test-integration", "Run integration tests");
 
+    // HTTP/1.1 Handler integration tests
+    const http1_handler_integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/integration/http1_handler_integration_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    http1_handler_integration_tests.root_module.addImport("z6", z6_module);
+    const run_http1_handler_integration_tests = b.addRunArtifact(http1_handler_integration_tests);
+    integration_test_step.dependOn(&run_http1_handler_integration_tests.step);
+    test_step.dependOn(&run_http1_handler_integration_tests.step);
+
     // Determinism integration test
     const determinism_tests = b.addTest(.{
         .root_module = b.createModule(.{

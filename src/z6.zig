@@ -23,3 +23,23 @@ pub const EventLogHeader = @import("event_log.zig").Header;
 pub const EventLogFooter = @import("event_log.zig").Footer;
 pub const EVENT_LOG_MAGIC_NUMBER = @import("event_log.zig").MAGIC_NUMBER;
 pub const EVENT_LOG_MAX_EVENTS = @import("event_log.zig").MAX_EVENTS;
+
+// Protocol interface
+pub const Protocol = @import("protocol.zig").Protocol;
+pub const Target = @import("protocol.zig").Target;
+pub const Method = @import("protocol.zig").Method;
+pub const Header = @import("protocol.zig").Header;
+pub const RequestId = @import("protocol.zig").RequestId;
+pub const Request = @import("protocol.zig").Request;
+pub const ProtocolError = @import("protocol.zig").ProtocolError;
+pub const NetworkError = @import("protocol.zig").NetworkError;
+pub const Status = @import("protocol.zig").Status;
+pub const Response = @import("protocol.zig").Response;
+pub const ConnectionId = @import("protocol.zig").ConnectionId;
+pub const CompletionResult = @import("protocol.zig").CompletionResult;
+pub const Completion = @import("protocol.zig").Completion;
+pub const CompletionQueue = @import("protocol.zig").CompletionQueue;
+pub const ProtocolConfig = @import("protocol.zig").ProtocolConfig;
+pub const HTTPConfig = @import("protocol.zig").HTTPConfig;
+pub const HTTPVersion = @import("protocol.zig").HTTPVersion;
+pub const ProtocolHandler = @import("protocol.zig").ProtocolHandler;

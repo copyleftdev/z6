@@ -12,6 +12,9 @@ const std = @import("std");
 const VU = @import("vu.zig").VU;
 const VUState = @import("vu.zig").VUState;
 const PRNG = @import("prng.zig").PRNG;
+const EventLog = @import("event_log.zig").EventLog;
+const Event = @import("event.zig").Event;
+const EventType = @import("event.zig").EventType;
 
 /// Tick is the fundamental unit of logical time
 pub const Tick = u64;
@@ -23,6 +26,9 @@ pub const SchedulerConfig = struct {
 
     /// PRNG seed (0 = use default seed)
     prng_seed: u64 = 0,
+
+    /// Optional event log for recording execution
+    event_log: ?*EventLog = null,
 };
 
 /// Scheduler - deterministic microkernel
@@ -44,6 +50,9 @@ pub const Scheduler = struct {
     /// Deterministic PRNG
     prng: PRNG,
 
+    /// Optional event log
+    event_log: ?*EventLog,
+
     /// Initialize scheduler
     pub fn init(allocator: std.mem.Allocator, config: SchedulerConfig) !Scheduler {
         // Validate config first (before precondition asserts)
@@ -63,6 +72,7 @@ pub const Scheduler = struct {
             .next_vu_id = 1, // VU IDs start at 1
             .max_vus = config.max_vus,
             .prng = PRNG.init(seed),
+            .event_log = config.event_log,
         };
 
         // Postconditions
@@ -90,6 +100,25 @@ pub const Scheduler = struct {
 
         self.current_tick += 1;
 
+        // Emit scheduler_tick event if logging
+        if (self.event_log) |event_log| {
+            const event = Event{
+                .header = .{
+                    .tick = self.current_tick,
+                    .vu_id = 0, // System event
+                    .event_type = .scheduler_tick,
+                    ._padding = 0,
+                    ._reserved = 0,
+                },
+                .payload = [_]u8{0} ** 240,
+                .checksum = 0,
+            };
+            event_log.append(event) catch |err| {
+                // Log error but don't fail - event logging is best-effort
+                std.debug.print("Failed to log scheduler_tick: {}\n", .{err});
+            };
+        }
+
         // Postconditions
         std.debug.assert(self.current_tick == old_tick + 1); // Tick advanced
         std.debug.assert(self.current_tick > 0); // Monotonic
@@ -111,6 +140,25 @@ pub const Scheduler = struct {
 
         const vu = VU.init(vu_id, spawn_tick);
         try self.vus.append(self.allocator, vu);
+
+        // Emit vu_spawned event if logging
+        if (self.event_log) |event_log| {
+            const event = Event{
+                .header = .{
+                    .tick = self.current_tick,
+                    .vu_id = vu_id,
+                    .event_type = .vu_spawned,
+                    ._padding = 0,
+                    ._reserved = 0,
+                },
+                .payload = [_]u8{0} ** 240,
+                .checksum = 0,
+            };
+            event_log.append(event) catch |err| {
+                // Log error but don't fail - event logging is best-effort
+                std.debug.print("Failed to log vu_spawned: {}\n", .{err});
+            };
+        }
 
         // Postconditions
         std.debug.assert(vu_id > 0); // Valid ID

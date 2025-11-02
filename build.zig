@@ -229,6 +229,18 @@ pub fn build(b: *std.Build) void {
     const run_scenario_tests = b.addRunArtifact(scenario_tests);
     test_step.dependOn(&run_scenario_tests.step);
 
+    // HTTP/2 Frame Parser tests
+    const http2_frame_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/http2_frame_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    http2_frame_tests.root_module.addImport("z6", z6_module);
+    const run_http2_frame_tests = b.addRunArtifact(http2_frame_tests);
+    test_step.dependOn(&run_http2_frame_tests.step);
+
     // Integration tests
     const integration_test_step = b.step("test-integration", "Run integration tests");
 

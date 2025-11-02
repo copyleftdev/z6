@@ -205,6 +205,18 @@ pub fn build(b: *std.Build) void {
     const run_http1_parser_tests = b.addRunArtifact(http1_parser_tests);
     test_step.dependOn(&run_http1_parser_tests.step);
 
+    // HTTP/1.1 Handler tests
+    const http1_handler_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/http1_handler_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    http1_handler_tests.root_module.addImport("z6", z6_module);
+    const run_http1_handler_tests = b.addRunArtifact(http1_handler_tests);
+    test_step.dependOn(&run_http1_handler_tests.step);
+
     // Integration tests
     const integration_test_step = b.step("test-integration", "Run integration tests");
 

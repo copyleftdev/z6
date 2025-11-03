@@ -307,6 +307,22 @@ pub fn build(b: *std.Build) void {
     const integration_step = b.step("run-integration", "Run minimal integration proof-of-concept");
     integration_step.dependOn(&run_minimal_integration.step);
 
+    // Scenario-based integration example
+    const scenario_integration = b.addExecutable(.{
+        .name = "scenario_integration",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/scenario_integration.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    scenario_integration.root_module.addImport("z6", z6_module);
+    b.installArtifact(scenario_integration);
+
+    const run_scenario_integration = b.addRunArtifact(scenario_integration);
+    const scenario_step = b.step("run-scenario", "Run scenario-based integration example");
+    scenario_step.dependOn(&run_scenario_integration.step);
+
     // Test checker tools
     const check_assertions_tests = b.addTest(.{
         .root_module = b.createModule(.{

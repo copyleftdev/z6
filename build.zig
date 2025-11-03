@@ -291,6 +291,22 @@ pub fn build(b: *std.Build) void {
     tools_step.dependOn(&b.addInstallArtifact(check_assertions, .{}).step);
     tools_step.dependOn(&b.addInstallArtifact(check_bounded_loops, .{}).step);
 
+    // Minimal integration example
+    const minimal_integration = b.addExecutable(.{
+        .name = "minimal_integration",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/minimal_integration.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    minimal_integration.root_module.addImport("z6", z6_module);
+    b.installArtifact(minimal_integration);
+
+    const run_minimal_integration = b.addRunArtifact(minimal_integration);
+    const integration_step = b.step("run-integration", "Run minimal integration proof-of-concept");
+    integration_step.dependOn(&run_minimal_integration.step);
+
     // Test checker tools
     const check_assertions_tests = b.addTest(.{
         .root_module = b.createModule(.{

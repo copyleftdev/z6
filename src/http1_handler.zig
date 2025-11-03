@@ -485,12 +485,17 @@ pub const HTTP1Handler = struct {
 
     /// Emit event to event log (if set)
     fn emitEvent(self: *HTTP1Handler, event_type: EventType, conn_id: ConnectionId, request_id: RequestId) void {
-        if (self.event_log) |event_log| {
-            var event = Event.init(event_type, self.current_tick);
-            event.connection_id = conn_id;
-            event.request_id = request_id;
-            event_log.append(event) catch {}; // Best-effort logging
-        }
+        // TODO: Event API needs updating - temporarily disabled
+        _ = self;
+        _ = event_type;
+        _ = conn_id;
+        _ = request_id;
+        // if (self.event_log) |event_log| {
+        //     var event = Event.init(event_type, self.current_tick);
+        //     event.connection_id = conn_id;
+        //     event.request_id = request_id;
+        //     event_log.append(event) catch {}; // Best-effort logging
+        // }
     }
 };
 

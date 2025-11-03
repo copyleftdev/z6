@@ -52,3 +52,11 @@ pub const ParserError = @import("http1_parser.zig").ParserError;
 // HTTP/1.1 Handler
 pub const HTTP1Handler = @import("http1_handler.zig").HTTP1Handler;
 pub const createHTTP1Handler = @import("http1_handler.zig").createHandler;
+
+// HTTP/2 Frame Parser
+pub const HTTP2FrameParser = @import("http2_frame.zig").HTTP2FrameParser;
+pub const HTTP2FrameType = @import("http2_frame.zig").FrameType;
+pub const HTTP2Frame = @import("http2_frame.zig").Frame;
+pub const HTTP2FrameHeader = @import("http2_frame.zig").FrameHeader;
+pub const HTTP2FrameError = @import("http2_frame.zig").FrameError;
+pub const HTTP2SettingsParameter = @import("http2_frame.zig").SettingsParameter;

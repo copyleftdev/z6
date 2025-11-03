@@ -303,6 +303,22 @@ pub fn build(b: *std.Build) void {
     tools_step.dependOn(&b.addInstallArtifact(check_assertions, .{}).step);
     tools_step.dependOn(&b.addInstallArtifact(check_bounded_loops, .{}).step);
 
+    // Real scenario integration example
+    const real_scenario_test = b.addExecutable(.{
+        .name = "real_scenario_test",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/real_scenario_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    real_scenario_test.root_module.addImport("z6", z6_module);
+    b.installArtifact(real_scenario_test);
+
+    const run_real_scenario_test = b.addRunArtifact(real_scenario_test);
+    const real_scenario_step = b.step("run-real-scenario", "Run real scenario file integration (Level 5)");
+    real_scenario_step.dependOn(&run_real_scenario_test.step);
+
     // Test checker tools
     const check_assertions_tests = b.addTest(.{
         .root_module = b.createModule(.{

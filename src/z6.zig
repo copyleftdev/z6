@@ -52,3 +52,8 @@ pub const ParserError = @import("http1_parser.zig").ParserError;
 // HTTP/1.1 Handler
 pub const HTTP1Handler = @import("http1_handler.zig").HTTP1Handler;
 pub const createHTTP1Handler = @import("http1_handler.zig").createHandler;
+
+// VU Execution Engine
+pub const VUEngine = @import("vu_engine.zig").VUEngine;
+pub const EngineConfig = @import("vu_engine.zig").EngineConfig;
+pub const EngineError = @import("vu_engine.zig").EngineError;

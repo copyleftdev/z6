@@ -217,6 +217,18 @@ pub fn build(b: *std.Build) void {
     const run_http1_handler_tests = b.addRunArtifact(http1_handler_tests);
     test_step.dependOn(&run_http1_handler_tests.step);
 
+    // VU Engine tests
+    const vu_engine_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/vu_engine_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    vu_engine_tests.root_module.addImport("z6", z6_module);
+    const run_vu_engine_tests = b.addRunArtifact(vu_engine_tests);
+    test_step.dependOn(&run_vu_engine_tests.step);
+
     // Integration tests
     const integration_test_step = b.step("test-integration", "Run integration tests");
 

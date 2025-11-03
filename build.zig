@@ -217,6 +217,18 @@ pub fn build(b: *std.Build) void {
     const run_http1_handler_tests = b.addRunArtifact(http1_handler_tests);
     test_step.dependOn(&run_http1_handler_tests.step);
 
+    // Scenario Parser tests
+    const scenario_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/scenario_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    scenario_tests.root_module.addImport("z6", z6_module);
+    const run_scenario_tests = b.addRunArtifact(scenario_tests);
+    test_step.dependOn(&run_scenario_tests.step);
+
     // Integration tests
     const integration_test_step = b.step("test-integration", "Run integration tests");
 

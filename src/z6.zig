@@ -52,3 +52,11 @@ pub const ParserError = @import("http1_parser.zig").ParserError;
 // HTTP/1.1 Handler
 pub const HTTP1Handler = @import("http1_handler.zig").HTTP1Handler;
 pub const createHTTP1Handler = @import("http1_handler.zig").createHandler;
+
+// Scenario Parser
+pub const Scenario = @import("scenario.zig").Scenario;
+pub const ScenarioParser = @import("scenario.zig").ScenarioParser;
+pub const ScenarioError = @import("scenario.zig").ScenarioError;
+pub const RequestDef = @import("scenario.zig").RequestDef;
+pub const ScenarioRuntime = @import("scenario.zig").Runtime;
+pub const ScenarioTarget = @import("scenario.zig").ScenarioTarget;

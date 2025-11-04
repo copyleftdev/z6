@@ -14,10 +14,13 @@ const scenario_mod = @import("scenario.zig");
 const protocol = @import("protocol.zig");
 const vu_mod = @import("vu.zig");
 const http1_handler = @import("http1_handler.zig");
+const cli = @import("cli.zig");
 
 const Allocator = std.mem.Allocator;
 const ScenarioParser = scenario_mod.ScenarioParser;
 const Scenario = scenario_mod.Scenario;
+const ExitCode = cli.ExitCode;
+const OutputFormat = cli.OutputFormat;
 
 const VERSION = "0.1.0-dev";
 
@@ -25,6 +28,8 @@ const VERSION = "0.1.0-dev";
 const Args = struct {
     command: Command,
     scenario_path: ?[]const u8,
+    second_path: ?[]const u8, // For diff command
+    output_format: OutputFormat,
     help: bool,
     version: bool,
 };
@@ -34,6 +39,9 @@ const Command = enum {
     none,
     run,
     validate,
+    replay,
+    analyze,
+    diff,
     help,
 };
 
@@ -48,6 +56,8 @@ fn parseArgs(allocator: Allocator) !Args {
     var result = Args{
         .command = .none,
         .scenario_path = null,
+        .second_path = null,
+        .output_format = .summary,
         .help = false,
         .version = false,
     };
@@ -57,14 +67,26 @@ fn parseArgs(allocator: Allocator) !Args {
             result.command = .run;
         } else if (std.mem.eql(u8, arg, "validate")) {
             result.command = .validate;
+        } else if (std.mem.eql(u8, arg, "replay")) {
+            result.command = .replay;
+        } else if (std.mem.eql(u8, arg, "analyze")) {
+            result.command = .analyze;
+        } else if (std.mem.eql(u8, arg, "diff")) {
+            result.command = .diff;
         } else if (std.mem.eql(u8, arg, "help") or std.mem.eql(u8, arg, "--help") or std.mem.eql(u8, arg, "-h")) {
             result.help = true;
             result.command = .help;
         } else if (std.mem.eql(u8, arg, "--version") or std.mem.eql(u8, arg, "-v")) {
             result.version = true;
+        } else if (std.mem.startsWith(u8, arg, "--format=")) {
+            const format_str = arg["--format=".len..];
+            result.output_format = OutputFormat.fromString(format_str) catch .summary;
         } else if (result.scenario_path == null) {
             // First non-flag argument is the scenario path
             result.scenario_path = arg;
+        } else if (result.second_path == null and result.command == .diff) {
+            // Second path for diff command
+            result.second_path = arg;
         }
     }
 
@@ -78,21 +100,35 @@ fn printHelp() void {
         \\Version: {s}
         \\
         \\USAGE:
-        \\    z6 <COMMAND> [OPTIONS] <SCENARIO_FILE>
+        \\    z6 <COMMAND> [OPTIONS] <FILE> [FILE2]
         \\
         \\COMMANDS:
         \\    run         Run a load test from a scenario file
         \\    validate    Validate a scenario file without running
+        \\    replay      Replay a test from event log (deterministic)
+        \\    analyze     Recompute metrics from event log
+        \\    diff        Compare results from two test runs
         \\    help        Show this help message
         \\
         \\OPTIONS:
-        \\    -h, --help     Show help message
-        \\    -v, --version  Show version information
+        \\    -h, --help         Show help message
+        \\    -v, --version      Show version information
+        \\    --format=<fmt>     Output format: summary, json, csv (default: summary)
         \\
         \\EXAMPLES:
-        \\    z6 run scenario.toml              Run load test
-        \\    z6 validate scenario.toml         Validate scenario file
-        \\    z6 --help                         Show help
+        \\    z6 run scenario.toml                    Run load test
+        \\    z6 run scenario.toml --format=json      Run with JSON output
+        \\    z6 validate scenario.toml               Validate scenario file
+        \\    z6 replay events.log                    Replay from event log
+        \\    z6 analyze events.log --format=csv      Analyze with CSV output
+        \\    z6 diff run1.log run2.log               Compare two runs
+        \\    z6 --help                               Show help
+        \\
+        \\EXIT CODES:
+        \\    0    Success
+        \\    1    Assertion failure (goals not met)
+        \\    2    Configuration error
+        \\    3    Runtime error
         \\
         \\SCENARIO FILE:
         \\    TOML format with sections:
@@ -229,6 +265,91 @@ fn runScenario(allocator: Allocator, scenario_path: []const u8) !void {
     std.debug.print("   Ready for load test execution (pending final integration)\n", .{});
 }
 
+/// Replay a test from event log
+fn replayTest(allocator: Allocator, event_log_path: []const u8, format: OutputFormat) !void {
+    std.debug.print("🔁 Replaying test from: {s}\n", .{event_log_path});
+    std.debug.print("   Output format: {s}\n\n", .{format.toString()});
+
+    // Read event log
+    const content = std.fs.cwd().readFileAlloc(
+        allocator,
+        event_log_path,
+        10 * 1024 * 1024, // 10 MB max
+    ) catch |err| {
+        std.debug.print("❌ Failed to read event log: {}\n", .{err});
+        return err;
+    };
+    defer allocator.free(content);
+
+    std.debug.print("✓ Event log read ({d} bytes)\n", .{content.len});
+    std.debug.print("\n⚠️  Replay functionality requires event log system integration.\n", .{});
+    std.debug.print("   This will replay all events deterministically using the same PRNG seed.\n", .{});
+    std.debug.print("   Status: Foundation ready, full implementation pending.\n", .{});
+}
+
+/// Analyze metrics from event log
+fn analyzeMetrics(allocator: Allocator, event_log_path: []const u8, format: OutputFormat) !void {
+    std.debug.print("📊 Analyzing metrics from: {s}\n", .{event_log_path});
+    std.debug.print("   Output format: {s}\n\n", .{format.toString()});
+
+    // Read event log
+    const content = std.fs.cwd().readFileAlloc(
+        allocator,
+        event_log_path,
+        10 * 1024 * 1024, // 10 MB max
+    ) catch |err| {
+        std.debug.print("❌ Failed to read event log: {}\n", .{err});
+        return err;
+    };
+    defer allocator.free(content);
+
+    std.debug.print("✓ Event log read ({d} bytes)\n", .{content.len});
+    std.debug.print("\n⚠️  Analysis functionality requires HDR histogram integration (TASK-400).\n", .{});
+    std.debug.print("   This will recompute all metrics from raw events.\n", .{});
+    std.debug.print("   Metrics: latency percentiles, error rates, throughput, etc.\n", .{});
+    std.debug.print("   Status: Foundation ready, full implementation pending.\n", .{});
+}
+
+/// Compare two test runs
+fn diffResults(allocator: Allocator, log1_path: []const u8, log2_path: []const u8, format: OutputFormat) !void {
+    std.debug.print("🔍 Comparing test runs:\n", .{});
+    std.debug.print("   Run 1: {s}\n", .{log1_path});
+    std.debug.print("   Run 2: {s}\n", .{log2_path});
+    std.debug.print("   Output format: {s}\n\n", .{format.toString()});
+
+    // Read both logs
+    const content1 = std.fs.cwd().readFileAlloc(
+        allocator,
+        log1_path,
+        10 * 1024 * 1024,
+    ) catch |err| {
+        std.debug.print("❌ Failed to read first log: {}\n", .{err});
+        return err;
+    };
+    defer allocator.free(content1);
+
+    const content2 = std.fs.cwd().readFileAlloc(
+        allocator,
+        log2_path,
+        10 * 1024 * 1024,
+    ) catch |err| {
+        std.debug.print("❌ Failed to read second log: {}\n", .{err});
+        return err;
+    };
+    defer allocator.free(content2);
+
+    std.debug.print("✓ Both logs read successfully\n", .{});
+    std.debug.print("   Log 1: {d} bytes\n", .{content1.len});
+    std.debug.print("   Log 2: {d} bytes\n", .{content2.len});
+    std.debug.print("\n⚠️  Diff functionality requires metrics reducer (TASK-401).\n", .{});
+    std.debug.print("   This will compare:\n", .{});
+    std.debug.print("   - Latency distributions (p50, p95, p99, p999)\n", .{});
+    std.debug.print("   - Error rates and types\n", .{});
+    std.debug.print("   - Throughput (requests/sec)\n", .{});
+    std.debug.print("   - Resource usage\n", .{});
+    std.debug.print("   Status: Foundation ready, full implementation pending.\n", .{});
+}
+
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -264,13 +385,36 @@ pub fn main() !void {
         .run => {
             runScenario(allocator, scenario_path) catch |err| {
                 std.debug.print("\n❌ Load test failed: {}\n", .{err});
-                return err;
+                std.process.exit(ExitCode.runtime_error.toInt());
             };
         },
         .validate => {
             validateScenario(allocator, scenario_path) catch |err| {
                 std.debug.print("\n❌ Validation failed: {}\n", .{err});
-                return err;
+                std.process.exit(ExitCode.config_error.toInt());
+            };
+        },
+        .replay => {
+            replayTest(allocator, scenario_path, args.output_format) catch |err| {
+                std.debug.print("\n❌ Replay failed: {}\n", .{err});
+                std.process.exit(ExitCode.runtime_error.toInt());
+            };
+        },
+        .analyze => {
+            analyzeMetrics(allocator, scenario_path, args.output_format) catch |err| {
+                std.debug.print("\n❌ Analysis failed: {}\n", .{err});
+                std.process.exit(ExitCode.runtime_error.toInt());
+            };
+        },
+        .diff => {
+            const second_path = args.second_path orelse {
+                std.debug.print("❌ Error: Diff command requires two files\n\n", .{});
+                printHelp();
+                std.process.exit(ExitCode.config_error.toInt());
+            };
+            diffResults(allocator, scenario_path, second_path, args.output_format) catch |err| {
+                std.debug.print("\n❌ Diff failed: {}\n", .{err});
+                std.process.exit(ExitCode.runtime_error.toInt());
             };
         },
         .help, .none => {

@@ -60,3 +60,9 @@ pub const ScenarioError = @import("scenario.zig").ScenarioError;
 pub const RequestDef = @import("scenario.zig").RequestDef;
 pub const ScenarioRuntime = @import("scenario.zig").Runtime;
 pub const ScenarioTarget = @import("scenario.zig").ScenarioTarget;
+
+// CLI Module
+pub const ExitCode = @import("cli.zig").ExitCode;
+pub const OutputFormat = @import("cli.zig").OutputFormat;
+pub const ProgressIndicator = @import("cli.zig").ProgressIndicator;
+pub const SignalHandler = @import("cli.zig").SignalHandler;

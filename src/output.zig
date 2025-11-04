@@ -35,9 +35,9 @@ pub fn formatJSON(allocator: Allocator, result: TestResult) ![]const u8 {
     std.debug.assert(result.total_requests >= result.successful_requests);
     std.debug.assert(result.total_requests >= result.failed_requests);
 
-    var output = std.ArrayList(u8).init(allocator);
-    errdefer output.deinit();
-    const writer = output.writer();
+    var output = try std.ArrayList(u8).initCapacity(allocator, 512);
+    defer output.deinit(allocator);
+    const writer = output.writer(allocator);
 
     try writer.writeAll("{\n");
     try writer.print("  \"test_name\": \"{s}\",\n", .{result.test_name});
@@ -54,20 +54,20 @@ pub fn formatJSON(allocator: Allocator, result: TestResult) ![]const u8 {
     try writer.writeAll("  }\n");
     try writer.writeAll("}\n");
 
-    return output.toOwnedSlice();
+    return try output.toOwnedSlice(allocator);
 }
 
 /// Format test result as CSV header
 pub fn formatCSVHeader(allocator: Allocator) ![]const u8 {
-    var output = std.ArrayList(u8).init(allocator);
-    errdefer output.deinit();
-    const writer = output.writer();
+    var output = try std.ArrayList(u8).initCapacity(allocator, 512);
+    defer output.deinit(allocator);
+    const writer = output.writer(allocator);
 
     try writer.writeAll("test_name,duration_seconds,total_requests,successful_requests,");
     try writer.writeAll("failed_requests,success_rate,error_rate,");
     try writer.writeAll("p50_latency_ms,p95_latency_ms,p99_latency_ms\n");
 
-    return output.toOwnedSlice();
+    return try output.toOwnedSlice(allocator);
 }
 
 /// Format test result as CSV row
@@ -76,9 +76,9 @@ pub fn formatCSV(allocator: Allocator, result: TestResult) ![]const u8 {
     std.debug.assert(result.total_requests >= result.successful_requests);
     std.debug.assert(result.total_requests >= result.failed_requests);
 
-    var output = std.ArrayList(u8).init(allocator);
-    errdefer output.deinit();
-    const writer = output.writer();
+    var output = try std.ArrayList(u8).initCapacity(allocator, 512);
+    defer output.deinit(allocator);
+    const writer = output.writer(allocator);
 
     try writer.print("{s},{d},{d},{d},{d},{d:.4},{d:.4},{d},{d},{d}\n", .{
         result.test_name,
@@ -93,7 +93,7 @@ pub fn formatCSV(allocator: Allocator, result: TestResult) ![]const u8 {
         result.p99_latency_ms,
     });
 
-    return output.toOwnedSlice();
+    return try output.toOwnedSlice(allocator);
 }
 
 /// Format summary output (human-readable)
@@ -102,9 +102,9 @@ pub fn formatSummary(allocator: Allocator, result: TestResult) ![]const u8 {
     std.debug.assert(result.total_requests >= result.successful_requests);
     std.debug.assert(result.total_requests >= result.failed_requests);
 
-    var output = std.ArrayList(u8).init(allocator);
-    errdefer output.deinit();
-    const writer = output.writer();
+    var output = try std.ArrayList(u8).initCapacity(allocator, 512);
+    defer output.deinit(allocator);
+    const writer = output.writer(allocator);
 
     try writer.writeAll("📊 Test Results Summary\n");
     try writer.writeAll("═══════════════════════\n\n");
@@ -123,7 +123,7 @@ pub fn formatSummary(allocator: Allocator, result: TestResult) ![]const u8 {
     try writer.print("  p95:            {d}ms\n", .{result.p95_latency_ms});
     try writer.print("  p99:            {d}ms\n", .{result.p99_latency_ms});
 
-    return output.toOwnedSlice();
+    return try output.toOwnedSlice(allocator);
 }
 
 test "formatJSON basic" {

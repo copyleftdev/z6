@@ -66,3 +66,10 @@ pub const ExitCode = @import("cli.zig").ExitCode;
 pub const OutputFormat = @import("cli.zig").OutputFormat;
 pub const ProgressIndicator = @import("cli.zig").ProgressIndicator;
 pub const SignalHandler = @import("cli.zig").SignalHandler;
+
+// Output Formatters
+pub const TestResult = @import("output.zig").TestResult;
+pub const formatJSON = @import("output.zig").formatJSON;
+pub const formatCSV = @import("output.zig").formatCSV;
+pub const formatCSVHeader = @import("output.zig").formatCSVHeader;
+pub const formatSummary = @import("output.zig").formatSummary;

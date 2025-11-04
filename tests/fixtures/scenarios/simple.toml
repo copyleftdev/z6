@@ -1,0 +1,27 @@
+# Simple Z6 Scenario
+[metadata]
+name = "Simple Test"
+version = "1.0"
+
+[runtime]
+duration_seconds = 60
+vus = 10
+prng_seed = 42
+
+[target]
+base_url = "http://localhost:8080"
+http_version = "http1.1"
+
+[[requests]]
+name = "get_hello"
+method = "GET"
+path = "/hello"
+timeout_ms = 1000
+
+[schedule]
+type = "constant"
+vus = 10
+
+[assertions]
+p99_latency_ms = 100
+error_rate_max = 0.01

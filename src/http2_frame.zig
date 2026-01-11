@@ -556,3 +556,328 @@ pub const ErrorCode = enum(u32) {
     INADEQUATE_SECURITY = 0xc,
     HTTP_1_1_REQUIRED = 0xd,
 };
+
+// ============================================================================
+// Frame Serialization Functions
+// ============================================================================
+
+/// Serialize frame header (9 bytes) into buffer
+/// Returns the 9-byte header
+pub fn serializeFrameHeader(header: FrameHeader) [9]u8 {
+    // Preconditions
+    std.debug.assert(header.length <= MAX_FRAME_SIZE); // Valid length
+    std.debug.assert(header.stream_id <= (1 << 31) - 1); // 31-bit stream ID
+
+    var buffer: [9]u8 = undefined;
+
+    // Length (24 bits, big-endian)
+    buffer[0] = @intCast((header.length >> 16) & 0xFF);
+    buffer[1] = @intCast((header.length >> 8) & 0xFF);
+    buffer[2] = @intCast(header.length & 0xFF);
+
+    // Type (8 bits)
+    buffer[3] = @intFromEnum(header.frame_type);
+
+    // Flags (8 bits)
+    buffer[4] = header.flags;
+
+    // Stream ID (31 bits, big-endian, R bit = 0)
+    buffer[5] = @intCast((header.stream_id >> 24) & 0x7F);
+    buffer[6] = @intCast((header.stream_id >> 16) & 0xFF);
+    buffer[7] = @intCast((header.stream_id >> 8) & 0xFF);
+    buffer[8] = @intCast(header.stream_id & 0xFF);
+
+    // Postconditions
+    std.debug.assert(buffer[5] & 0x80 == 0); // R bit is 0
+
+    return buffer;
+}
+
+/// Serialize a single SETTINGS parameter (6 bytes)
+fn serializeSettingsParameter(identifier: u16, value: u32, buffer: []u8) void {
+    // Preconditions
+    std.debug.assert(buffer.len >= 6);
+
+    // Identifier (16 bits, big-endian)
+    buffer[0] = @intCast((identifier >> 8) & 0xFF);
+    buffer[1] = @intCast(identifier & 0xFF);
+
+    // Value (32 bits, big-endian)
+    buffer[2] = @intCast((value >> 24) & 0xFF);
+    buffer[3] = @intCast((value >> 16) & 0xFF);
+    buffer[4] = @intCast((value >> 8) & 0xFF);
+    buffer[5] = @intCast(value & 0xFF);
+}
+
+/// HTTP/2 Settings for serialization
+pub const Settings = struct {
+    header_table_size: u32 = 4096,
+    enable_push: bool = false,
+    max_concurrent_streams: u32 = 100,
+    initial_window_size: u32 = 65535,
+    max_frame_size: u32 = 16384,
+    max_header_list_size: u32 = 8192,
+};
+
+/// Serialize SETTINGS frame
+/// Returns total bytes written (9 header + 36 payload for 6 settings)
+pub fn serializeSettingsFrame(settings: Settings, buffer: []u8) usize {
+    // Preconditions
+    std.debug.assert(buffer.len >= 9 + 36); // Header + 6 settings * 6 bytes
+    std.debug.assert(settings.max_frame_size >= 16384); // RFC minimum
+
+    var pos: usize = 9; // Start after header
+
+    // SETTINGS_HEADER_TABLE_SIZE (0x1)
+    serializeSettingsParameter(0x1, settings.header_table_size, buffer[pos..]);
+    pos += 6;
+
+    // SETTINGS_ENABLE_PUSH (0x2)
+    serializeSettingsParameter(0x2, if (settings.enable_push) 1 else 0, buffer[pos..]);
+    pos += 6;
+
+    // SETTINGS_MAX_CONCURRENT_STREAMS (0x3)
+    serializeSettingsParameter(0x3, settings.max_concurrent_streams, buffer[pos..]);
+    pos += 6;
+
+    // SETTINGS_INITIAL_WINDOW_SIZE (0x4)
+    serializeSettingsParameter(0x4, settings.initial_window_size, buffer[pos..]);
+    pos += 6;
+
+    // SETTINGS_MAX_FRAME_SIZE (0x5)
+    serializeSettingsParameter(0x5, settings.max_frame_size, buffer[pos..]);
+    pos += 6;
+
+    // SETTINGS_MAX_HEADER_LIST_SIZE (0x6)
+    serializeSettingsParameter(0x6, settings.max_header_list_size, buffer[pos..]);
+    pos += 6;
+
+    const payload_len: u24 = 36;
+
+    // Write frame header
+    const header = serializeFrameHeader(.{
+        .length = payload_len,
+        .frame_type = .SETTINGS,
+        .flags = 0,
+        .stream_id = 0,
+    });
+    @memcpy(buffer[0..9], &header);
+
+    // Postconditions
+    std.debug.assert(pos == 9 + 36);
+
+    return pos;
+}
+
+/// Serialize SETTINGS ACK frame (empty payload)
+pub fn serializeSettingsAck(buffer: []u8) usize {
+    // Preconditions
+    std.debug.assert(buffer.len >= 9);
+
+    const header = serializeFrameHeader(.{
+        .length = 0,
+        .frame_type = .SETTINGS,
+        .flags = FrameFlags.ACK,
+        .stream_id = 0,
+    });
+    @memcpy(buffer[0..9], &header);
+
+    // Postconditions
+    std.debug.assert(buffer[4] == FrameFlags.ACK);
+
+    return 9;
+}
+
+/// Serialize DATA frame
+/// Returns total bytes written (9 header + payload)
+pub fn serializeDataFrame(
+    stream_id: u31,
+    data: []const u8,
+    end_stream: bool,
+    buffer: []u8,
+) usize {
+    // Preconditions
+    std.debug.assert(stream_id > 0); // DATA must be on a stream
+    std.debug.assert(data.len <= DEFAULT_MAX_FRAME_SIZE); // Within frame size
+    std.debug.assert(buffer.len >= 9 + data.len);
+
+    var flags: u8 = 0;
+    if (end_stream) {
+        flags |= FrameFlags.END_STREAM;
+    }
+
+    const header = serializeFrameHeader(.{
+        .length = @intCast(data.len),
+        .frame_type = .DATA,
+        .flags = flags,
+        .stream_id = stream_id,
+    });
+    @memcpy(buffer[0..9], &header);
+    @memcpy(buffer[9..][0..data.len], data);
+
+    // Postconditions
+    std.debug.assert(buffer[5] & 0x80 == 0); // R bit is 0
+
+    return 9 + data.len;
+}
+
+/// Serialize HEADERS frame (without HPACK - caller provides encoded header block)
+/// Returns total bytes written
+pub fn serializeHeadersFrame(
+    stream_id: u31,
+    header_block: []const u8,
+    end_stream: bool,
+    end_headers: bool,
+    buffer: []u8,
+) usize {
+    // Preconditions
+    std.debug.assert(stream_id > 0); // HEADERS must be on a stream
+    std.debug.assert(stream_id % 2 == 1); // Client streams are odd
+    std.debug.assert(header_block.len <= DEFAULT_MAX_FRAME_SIZE);
+    std.debug.assert(buffer.len >= 9 + header_block.len);
+
+    var flags: u8 = 0;
+    if (end_stream) {
+        flags |= FrameFlags.END_STREAM;
+    }
+    if (end_headers) {
+        flags |= FrameFlags.END_HEADERS;
+    }
+
+    const header = serializeFrameHeader(.{
+        .length = @intCast(header_block.len),
+        .frame_type = .HEADERS,
+        .flags = flags,
+        .stream_id = stream_id,
+    });
+    @memcpy(buffer[0..9], &header);
+    @memcpy(buffer[9..][0..header_block.len], header_block);
+
+    // Postconditions
+    std.debug.assert(buffer[5] & 0x80 == 0); // R bit is 0
+
+    return 9 + header_block.len;
+}
+
+/// Serialize PING frame (8-byte opaque data)
+pub fn serializePingFrame(opaque_data: [8]u8, ack: bool, buffer: []u8) usize {
+    // Preconditions
+    std.debug.assert(buffer.len >= 17); // 9 header + 8 payload
+
+    var flags: u8 = 0;
+    if (ack) {
+        flags |= FrameFlags.ACK;
+    }
+
+    const header = serializeFrameHeader(.{
+        .length = 8,
+        .frame_type = .PING,
+        .flags = flags,
+        .stream_id = 0, // PING must be on stream 0
+    });
+    @memcpy(buffer[0..9], &header);
+    @memcpy(buffer[9..17], &opaque_data);
+
+    // Postconditions
+    std.debug.assert(buffer[5] == 0); // Stream ID high byte is 0
+
+    return 17;
+}
+
+/// Serialize WINDOW_UPDATE frame
+pub fn serializeWindowUpdateFrame(stream_id: u31, increment: u31, buffer: []u8) usize {
+    // Preconditions
+    std.debug.assert(increment > 0); // Must be positive
+    std.debug.assert(buffer.len >= 13); // 9 header + 4 payload
+
+    const header = serializeFrameHeader(.{
+        .length = 4,
+        .frame_type = .WINDOW_UPDATE,
+        .flags = 0,
+        .stream_id = stream_id,
+    });
+    @memcpy(buffer[0..9], &header);
+
+    // Window size increment (31 bits, R bit = 0)
+    buffer[9] = @intCast((increment >> 24) & 0x7F);
+    buffer[10] = @intCast((increment >> 16) & 0xFF);
+    buffer[11] = @intCast((increment >> 8) & 0xFF);
+    buffer[12] = @intCast(increment & 0xFF);
+
+    // Postconditions
+    std.debug.assert(buffer[9] & 0x80 == 0); // R bit is 0
+
+    return 13;
+}
+
+/// Serialize GOAWAY frame
+pub fn serializeGoawayFrame(
+    last_stream_id: u31,
+    error_code: ErrorCode,
+    debug_data: []const u8,
+    buffer: []u8,
+) usize {
+    // Preconditions
+    std.debug.assert(buffer.len >= 9 + 8 + debug_data.len);
+    std.debug.assert(debug_data.len <= DEFAULT_MAX_FRAME_SIZE - 8);
+
+    const payload_len: u24 = @intCast(8 + debug_data.len);
+
+    const header = serializeFrameHeader(.{
+        .length = payload_len,
+        .frame_type = .GOAWAY,
+        .flags = 0,
+        .stream_id = 0, // GOAWAY must be on stream 0
+    });
+    @memcpy(buffer[0..9], &header);
+
+    // Last stream ID (31 bits, R bit = 0)
+    buffer[9] = @intCast((last_stream_id >> 24) & 0x7F);
+    buffer[10] = @intCast((last_stream_id >> 16) & 0xFF);
+    buffer[11] = @intCast((last_stream_id >> 8) & 0xFF);
+    buffer[12] = @intCast(last_stream_id & 0xFF);
+
+    // Error code (32 bits)
+    const err_val = @intFromEnum(error_code);
+    buffer[13] = @intCast((err_val >> 24) & 0xFF);
+    buffer[14] = @intCast((err_val >> 16) & 0xFF);
+    buffer[15] = @intCast((err_val >> 8) & 0xFF);
+    buffer[16] = @intCast(err_val & 0xFF);
+
+    // Debug data (optional)
+    if (debug_data.len > 0) {
+        @memcpy(buffer[17..][0..debug_data.len], debug_data);
+    }
+
+    // Postconditions
+    std.debug.assert(buffer[9] & 0x80 == 0); // R bit is 0
+
+    return 9 + 8 + debug_data.len;
+}
+
+/// Serialize RST_STREAM frame
+pub fn serializeRstStreamFrame(stream_id: u31, error_code: ErrorCode, buffer: []u8) usize {
+    // Preconditions
+    std.debug.assert(stream_id > 0); // RST_STREAM must be on a stream
+    std.debug.assert(buffer.len >= 13); // 9 header + 4 payload
+
+    const header = serializeFrameHeader(.{
+        .length = 4,
+        .frame_type = .RST_STREAM,
+        .flags = 0,
+        .stream_id = stream_id,
+    });
+    @memcpy(buffer[0..9], &header);
+
+    // Error code (32 bits)
+    const err_val = @intFromEnum(error_code);
+    buffer[9] = @intCast((err_val >> 24) & 0xFF);
+    buffer[10] = @intCast((err_val >> 16) & 0xFF);
+    buffer[11] = @intCast((err_val >> 8) & 0xFF);
+    buffer[12] = @intCast(err_val & 0xFF);
+
+    // Postconditions
+    std.debug.assert(buffer[5] & 0x80 == 0); // R bit is 0
+
+    return 13;
+}

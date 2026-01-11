@@ -360,3 +360,258 @@ test "http2_frame: bounded loops verification" {
     // All loops in HTTP/2 frame parser are bounded:
     // - parseSettingsFrame: bounded by param_count AND 100 max
 }
+
+// ============================================================================
+// Frame Serialization Tests
+// ============================================================================
+
+test "http2_frame: serialize frame header" {
+    const header = z6.HTTP2FrameHeader{
+        .length = 0x123456 & 0xFFFFFF, // 24-bit length
+        .frame_type = .SETTINGS,
+        .flags = 0x01,
+        .stream_id = 0x7FFFFFFF, // Max 31-bit value
+    };
+
+    const serialized = z6.serializeFrameHeader(header);
+
+    // Verify length (big-endian)
+    try testing.expectEqual(@as(u8, 0x12), serialized[0]);
+    try testing.expectEqual(@as(u8, 0x34), serialized[1]);
+    try testing.expectEqual(@as(u8, 0x56), serialized[2]);
+
+    // Verify type
+    try testing.expectEqual(@as(u8, 0x04), serialized[3]); // SETTINGS
+
+    // Verify flags
+    try testing.expectEqual(@as(u8, 0x01), serialized[4]);
+
+    // Verify stream ID (31 bits, R bit = 0)
+    try testing.expectEqual(@as(u8, 0x7F), serialized[5]);
+    try testing.expectEqual(@as(u8, 0xFF), serialized[6]);
+    try testing.expectEqual(@as(u8, 0xFF), serialized[7]);
+    try testing.expectEqual(@as(u8, 0xFF), serialized[8]);
+}
+
+test "http2_frame: serialize SETTINGS frame" {
+    var buffer: [128]u8 = undefined;
+    const settings = z6.HTTP2Settings{
+        .header_table_size = 4096,
+        .enable_push = false,
+        .max_concurrent_streams = 100,
+        .initial_window_size = 65535,
+        .max_frame_size = 16384,
+        .max_header_list_size = 8192,
+    };
+
+    const len = z6.serializeSettingsFrame(settings, &buffer);
+
+    // Should be 9 header + 36 payload (6 settings * 6 bytes)
+    try testing.expectEqual(@as(usize, 45), len);
+
+    // Verify frame type is SETTINGS
+    try testing.expectEqual(@as(u8, 0x04), buffer[3]);
+
+    // Verify stream ID is 0
+    try testing.expectEqual(@as(u8, 0x00), buffer[5]);
+    try testing.expectEqual(@as(u8, 0x00), buffer[6]);
+    try testing.expectEqual(@as(u8, 0x00), buffer[7]);
+    try testing.expectEqual(@as(u8, 0x00), buffer[8]);
+
+    // Verify payload length (36 bytes)
+    try testing.expectEqual(@as(u8, 0x00), buffer[0]);
+    try testing.expectEqual(@as(u8, 0x00), buffer[1]);
+    try testing.expectEqual(@as(u8, 0x24), buffer[2]); // 36 in hex
+}
+
+test "http2_frame: serialize SETTINGS ACK" {
+    var buffer: [16]u8 = undefined;
+
+    const len = z6.serializeSettingsAck(&buffer);
+
+    // Should be 9 bytes (header only, no payload)
+    try testing.expectEqual(@as(usize, 9), len);
+
+    // Verify ACK flag is set
+    try testing.expectEqual(@as(u8, 0x01), buffer[4]);
+
+    // Verify payload length is 0
+    try testing.expectEqual(@as(u8, 0x00), buffer[0]);
+    try testing.expectEqual(@as(u8, 0x00), buffer[1]);
+    try testing.expectEqual(@as(u8, 0x00), buffer[2]);
+}
+
+test "http2_frame: serialize DATA frame" {
+    var buffer: [64]u8 = undefined;
+    const data = "Hello, HTTP/2!";
+
+    const len = z6.serializeDataFrame(1, data, true, &buffer);
+
+    // Should be 9 header + 14 payload
+    try testing.expectEqual(@as(usize, 23), len);
+
+    // Verify frame type is DATA
+    try testing.expectEqual(@as(u8, 0x00), buffer[3]);
+
+    // Verify END_STREAM flag
+    try testing.expectEqual(@as(u8, 0x01), buffer[4]);
+
+    // Verify stream ID is 1
+    try testing.expectEqual(@as(u8, 0x00), buffer[5]);
+    try testing.expectEqual(@as(u8, 0x00), buffer[6]);
+    try testing.expectEqual(@as(u8, 0x00), buffer[7]);
+    try testing.expectEqual(@as(u8, 0x01), buffer[8]);
+
+    // Verify payload
+    try testing.expectEqualStrings(data, buffer[9..23]);
+}
+
+test "http2_frame: serialize HEADERS frame" {
+    var buffer: [64]u8 = undefined;
+    const header_block = &[_]u8{ 0x82, 0x86, 0x84 }; // Example HPACK encoded
+
+    const len = z6.serializeHeadersFrame(1, header_block, true, true, &buffer);
+
+    // Should be 9 header + 3 payload
+    try testing.expectEqual(@as(usize, 12), len);
+
+    // Verify frame type is HEADERS
+    try testing.expectEqual(@as(u8, 0x01), buffer[3]);
+
+    // Verify flags: END_STREAM (0x1) | END_HEADERS (0x4) = 0x5
+    try testing.expectEqual(@as(u8, 0x05), buffer[4]);
+
+    // Verify stream ID is 1 (odd for client)
+    try testing.expectEqual(@as(u8, 0x01), buffer[8]);
+}
+
+test "http2_frame: serialize PING frame" {
+    var buffer: [32]u8 = undefined;
+    const opaque_data = [8]u8{ 1, 2, 3, 4, 5, 6, 7, 8 };
+
+    const len = z6.serializePingFrame(opaque_data, false, &buffer);
+
+    // Should be 17 bytes (9 header + 8 payload)
+    try testing.expectEqual(@as(usize, 17), len);
+
+    // Verify frame type is PING
+    try testing.expectEqual(@as(u8, 0x06), buffer[3]);
+
+    // Verify no ACK flag
+    try testing.expectEqual(@as(u8, 0x00), buffer[4]);
+
+    // Verify stream ID is 0
+    try testing.expectEqual(@as(u8, 0x00), buffer[8]);
+
+    // Verify opaque data
+    try testing.expectEqualSlices(u8, &opaque_data, buffer[9..17]);
+}
+
+test "http2_frame: serialize PING ACK" {
+    var buffer: [32]u8 = undefined;
+    const opaque_data = [8]u8{ 1, 2, 3, 4, 5, 6, 7, 8 };
+
+    const len = z6.serializePingFrame(opaque_data, true, &buffer);
+
+    try testing.expectEqual(@as(usize, 17), len);
+
+    // Verify ACK flag is set
+    try testing.expectEqual(@as(u8, 0x01), buffer[4]);
+}
+
+test "http2_frame: serialize WINDOW_UPDATE frame" {
+    var buffer: [16]u8 = undefined;
+
+    const len = z6.serializeWindowUpdateFrame(1, 65535, &buffer);
+
+    // Should be 13 bytes (9 header + 4 payload)
+    try testing.expectEqual(@as(usize, 13), len);
+
+    // Verify frame type is WINDOW_UPDATE
+    try testing.expectEqual(@as(u8, 0x08), buffer[3]);
+
+    // Verify stream ID
+    try testing.expectEqual(@as(u8, 0x01), buffer[8]);
+
+    // Verify increment (65535 = 0x0000FFFF, big-endian)
+    try testing.expectEqual(@as(u8, 0x00), buffer[9]);
+    try testing.expectEqual(@as(u8, 0x00), buffer[10]);
+    try testing.expectEqual(@as(u8, 0xFF), buffer[11]);
+    try testing.expectEqual(@as(u8, 0xFF), buffer[12]);
+}
+
+test "http2_frame: serialize GOAWAY frame" {
+    var buffer: [64]u8 = undefined;
+    const debug_data = "test error";
+
+    const len = z6.serializeGoawayFrame(5, .PROTOCOL_ERROR, debug_data, &buffer);
+
+    // Should be 9 header + 8 (last_stream + error) + 10 debug
+    try testing.expectEqual(@as(usize, 27), len);
+
+    // Verify frame type is GOAWAY
+    try testing.expectEqual(@as(u8, 0x07), buffer[3]);
+
+    // Verify stream ID is 0
+    try testing.expectEqual(@as(u8, 0x00), buffer[8]);
+
+    // Verify last stream ID (5)
+    try testing.expectEqual(@as(u8, 0x00), buffer[9]);
+    try testing.expectEqual(@as(u8, 0x00), buffer[10]);
+    try testing.expectEqual(@as(u8, 0x00), buffer[11]);
+    try testing.expectEqual(@as(u8, 0x05), buffer[12]);
+
+    // Verify error code (PROTOCOL_ERROR = 0x1)
+    try testing.expectEqual(@as(u8, 0x00), buffer[13]);
+    try testing.expectEqual(@as(u8, 0x00), buffer[14]);
+    try testing.expectEqual(@as(u8, 0x00), buffer[15]);
+    try testing.expectEqual(@as(u8, 0x01), buffer[16]);
+
+    // Verify debug data
+    try testing.expectEqualStrings(debug_data, buffer[17..27]);
+}
+
+test "http2_frame: serialize RST_STREAM frame" {
+    var buffer: [16]u8 = undefined;
+
+    const len = z6.serializeRstStreamFrame(3, .CANCEL, &buffer);
+
+    // Should be 13 bytes (9 header + 4 payload)
+    try testing.expectEqual(@as(usize, 13), len);
+
+    // Verify frame type is RST_STREAM
+    try testing.expectEqual(@as(u8, 0x03), buffer[3]);
+
+    // Verify stream ID (3)
+    try testing.expectEqual(@as(u8, 0x03), buffer[8]);
+
+    // Verify error code (CANCEL = 0x8)
+    try testing.expectEqual(@as(u8, 0x00), buffer[9]);
+    try testing.expectEqual(@as(u8, 0x00), buffer[10]);
+    try testing.expectEqual(@as(u8, 0x00), buffer[11]);
+    try testing.expectEqual(@as(u8, 0x08), buffer[12]);
+}
+
+test "http2_frame: serialize and parse roundtrip" {
+    const allocator = testing.allocator;
+    var parser = z6.HTTP2FrameParser.init(allocator);
+
+    // Serialize a SETTINGS frame
+    var buffer: [128]u8 = undefined;
+    const settings = z6.HTTP2Settings{};
+    const len = z6.serializeSettingsFrame(settings, &buffer);
+
+    // Parse it back
+    const frame = try parser.parseFrame(buffer[0..len]);
+
+    // Verify header
+    try testing.expectEqual(z6.HTTP2FrameType.SETTINGS, frame.header.frame_type);
+    try testing.expectEqual(@as(u31, 0), frame.header.stream_id);
+    try testing.expectEqual(@as(u24, 36), frame.header.length);
+
+    // Parse settings
+    const params = try parser.parseSettingsFrame(frame);
+    defer parser.freeSettings(params);
+
+    try testing.expectEqual(@as(usize, 6), params.len);
+}

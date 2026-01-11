@@ -122,3 +122,7 @@ pub const EngineError = @import("vu_engine.zig").EngineError;
 pub const VUContext = @import("vu_engine.zig").VUContext;
 pub const VU_ENGINE_MAX_VUS = @import("vu_engine.zig").MAX_VUS;
 pub const DEFAULT_THINK_TIME_TICKS = @import("vu_engine.zig").DEFAULT_THINK_TIME_TICKS;
+
+// HDR Histogram
+pub const HdrHistogram = @import("hdr_histogram.zig").HdrHistogram;
+pub const HdrError = @import("hdr_histogram.zig").HdrError;

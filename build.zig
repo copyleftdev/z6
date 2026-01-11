@@ -277,6 +277,18 @@ pub fn build(b: *std.Build) void {
     const run_http2_handler_tests = b.addRunArtifact(http2_handler_tests);
     test_step.dependOn(&run_http2_handler_tests.step);
 
+    // HDR Histogram tests
+    const hdr_histogram_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/hdr_histogram_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    hdr_histogram_tests.root_module.addImport("z6", z6_module);
+    const run_hdr_histogram_tests = b.addRunArtifact(hdr_histogram_tests);
+    test_step.dependOn(&run_hdr_histogram_tests.step);
+
     // Integration tests
     const integration_test_step = b.step("test-integration", "Run integration tests");
 

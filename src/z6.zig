@@ -74,6 +74,23 @@ pub const formatCSV = @import("output.zig").formatCSV;
 pub const formatCSVHeader = @import("output.zig").formatCSVHeader;
 pub const formatSummary = @import("output.zig").formatSummary;
 
+// Enhanced Metrics Output Formatters
+pub const OutputConfig = @import("output.zig").OutputConfig;
+pub const IntervalMetrics = @import("output.zig").IntervalMetrics;
+pub const METHOD_NAMES = @import("output.zig").METHOD_NAMES;
+pub const STATUS_NAMES = @import("output.zig").STATUS_NAMES;
+pub const nsToMs = @import("output.zig").nsToMs;
+pub const formatWithCommas = @import("output.zig").formatWithCommas;
+pub const formatPercent = @import("output.zig").formatPercent;
+pub const formatDelta = @import("output.zig").formatDelta;
+pub const formatSummaryText = @import("output.zig").formatSummaryText;
+pub const formatMetricsJSON = @import("output.zig").formatMetricsJSON;
+pub const formatTimeSeriesHeader = @import("output.zig").formatTimeSeriesHeader;
+pub const formatTimeSeriesRow = @import("output.zig").formatTimeSeriesRow;
+pub const formatDiff = @import("output.zig").formatDiff;
+pub const metricsToJSON = @import("output.zig").metricsToJSON;
+pub const metricsToSummary = @import("output.zig").metricsToSummary;
+
 // HTTP/2 Frame Parser
 pub const HTTP2FrameParser = @import("http2_frame.zig").HTTP2FrameParser;
 pub const HTTP2FrameType = @import("http2_frame.zig").FrameType;

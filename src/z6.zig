@@ -93,3 +93,6 @@ pub const HTTP2_CONNECTION_PREFACE = @import("http2_frame.zig").CONNECTION_PREFA
 pub const VUEngine = @import("vu_engine.zig").VUEngine;
 pub const EngineConfig = @import("vu_engine.zig").EngineConfig;
 pub const EngineError = @import("vu_engine.zig").EngineError;
+pub const VUContext = @import("vu_engine.zig").VUContext;
+pub const VU_ENGINE_MAX_VUS = @import("vu_engine.zig").MAX_VUS;
+pub const DEFAULT_THINK_TIME_TICKS = @import("vu_engine.zig").DEFAULT_THINK_TIME_TICKS;

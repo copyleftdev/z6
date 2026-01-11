@@ -284,7 +284,7 @@ pub const VUEngine = struct {
         std.debug.assert(self.total_weight > 0.0); // Valid weights
 
         // Generate random value in [0, total_weight)
-        const rand_val = self.prng.nextFloat() * self.total_weight;
+        const rand_val: f32 = @floatCast(self.prng.float() * @as(f64, self.total_weight));
 
         // Find request by accumulated weight
         var accumulated: f32 = 0.0;

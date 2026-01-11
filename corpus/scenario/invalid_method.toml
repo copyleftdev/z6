@@ -1,0 +1,5 @@
+[[requests]]
+name = "test"
+method = "INVALID"
+path = "/"
+

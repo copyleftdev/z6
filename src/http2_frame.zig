@@ -102,13 +102,13 @@ pub const HTTP2FrameParser = struct {
 
     /// Parse frame header (9 bytes)
     pub fn parseHeader(self: *HTTP2FrameParser, data: []const u8) !FrameHeader {
-        // Preconditions
-        std.debug.assert(data.len >= 9); // Must have at least header
-        std.debug.assert(self.max_frame_size <= MAX_FRAME_SIZE); // Valid limit
-
+        // Validate input length
         if (data.len < 9) {
             return FrameError.FrameTooShort;
         }
+
+        // Preconditions (verified after input validation)
+        std.debug.assert(self.max_frame_size <= MAX_FRAME_SIZE); // Valid limit
 
         // Parse length (24 bits, big-endian)
         const length: u24 = (@as(u24, data[0]) << 16) |
@@ -146,10 +146,10 @@ pub const HTTP2FrameParser = struct {
 
     /// Parse complete frame
     pub fn parseFrame(self: *HTTP2FrameParser, data: []const u8) !Frame {
-        // Preconditions
-        std.debug.assert(data.len >= 9); // Must have header
+        // Precondition (self is valid)
         std.debug.assert(self.max_frame_size <= MAX_FRAME_SIZE); // Valid
 
+        // parseHeader validates data.len >= 9 and returns error if too short
         const header = try self.parseHeader(data);
 
         // Check frame size

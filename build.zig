@@ -428,12 +428,63 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_checker_tests.step);
     test_step.dependOn(&run_loop_tests.step);
 
-    // Fuzz targets (placeholder for TASK-300+)
-    _ = b.step("fuzz-targets", "Build all fuzz targets");
-    // TODO: Add fuzz targets when parsers are implemented:
-    // - fuzz_http1_response
-    // - fuzz_http2_frame
-    // - fuzz_event_serialization
+    // Fuzz targets (TASK-500)
+    const fuzz_step = b.step("fuzz-targets", "Build and run all fuzz targets");
+
+    // HTTP/1.1 Parser fuzz tests
+    const http1_fuzz = b.addTest(.{
+        .name = "http1_parser_fuzz",
+        .root_source_file = b.path("tests/fuzz/http1_parser_fuzz.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    http1_fuzz.root_module.addImport("z6", z6_module);
+    const run_http1_fuzz = b.addRunArtifact(http1_fuzz);
+    fuzz_step.dependOn(&run_http1_fuzz.step);
+
+    // HTTP/2 Frame Parser fuzz tests
+    const http2_fuzz = b.addTest(.{
+        .name = "http2_frame_fuzz",
+        .root_source_file = b.path("tests/fuzz/http2_frame_fuzz.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    http2_fuzz.root_module.addImport("z6", z6_module);
+    const run_http2_fuzz = b.addRunArtifact(http2_fuzz);
+    fuzz_step.dependOn(&run_http2_fuzz.step);
+
+    // HPACK Decoder fuzz tests
+    const hpack_fuzz = b.addTest(.{
+        .name = "hpack_decoder_fuzz",
+        .root_source_file = b.path("tests/fuzz/hpack_decoder_fuzz.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    hpack_fuzz.root_module.addImport("z6", z6_module);
+    const run_hpack_fuzz = b.addRunArtifact(hpack_fuzz);
+    fuzz_step.dependOn(&run_hpack_fuzz.step);
+
+    // Scenario Parser fuzz tests
+    const scenario_fuzz = b.addTest(.{
+        .name = "scenario_parser_fuzz",
+        .root_source_file = b.path("tests/fuzz/scenario_parser_fuzz.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    scenario_fuzz.root_module.addImport("z6", z6_module);
+    const run_scenario_fuzz = b.addRunArtifact(scenario_fuzz);
+    fuzz_step.dependOn(&run_scenario_fuzz.step);
+
+    // Event Serialization fuzz tests (existing)
+    const event_fuzz = b.addTest(.{
+        .name = "event_serialization_fuzz",
+        .root_source_file = b.path("tests/fuzz/event_serialization_fuzz.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    event_fuzz.root_module.addImport("z6", z6_module);
+    const run_event_fuzz = b.addRunArtifact(event_fuzz);
+    fuzz_step.dependOn(&run_event_fuzz.step);
 
     // Documentation generation (placeholder for TASK-400+)
     _ = b.step("docs", "Generate documentation");

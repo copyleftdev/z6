@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Content-Length: 0
+
+ echo -e HTTP/1.0 200 OK
+Content-Length: 4
+
+test echo -e garbage data not http echo -n  echo -n HTTP echo -n HTTP/1.1  echo -e HTTP/1.1 200 OK
+ echo -e HTTP/1.1 999 Custom
+Content-Length: 0
+
+ ls /home/ops/Project/z6/corpus/http1_response/

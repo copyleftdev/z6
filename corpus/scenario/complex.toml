@@ -1,0 +1,45 @@
+[metadata]
+name = "Complex Test"
+version = "1.0"
+description = "A more complex scenario with multiple requests"
+
+[runtime]
+duration_seconds = 300
+vus = 100
+prng_seed = 12345
+
+[target]
+base_url = "https://api.example.com"
+http_version = "http2"
+tls = true
+
+[[requests]]
+name = "get_users"
+method = "GET"
+path = "/api/users"
+timeout_ms = 5000
+weight = 70
+
+[[requests]]
+name = "create_user"
+method = "POST"
+path = "/api/users"
+timeout_ms = 10000
+body = '{"name": "test"}'
+weight = 20
+
+[[requests]]
+name = "delete_user"
+method = "DELETE"
+path = "/api/users/1"
+timeout_ms = 5000
+weight = 10
+
+[schedule]
+type = "ramp"
+vus = 100
+
+[assertions]
+p99_latency_ms = 500
+error_rate_max = 0.01
+success_rate_min = 0.99

@@ -95,6 +95,7 @@ pub const metricsToSummary = @import("output.zig").metricsToSummary;
 pub const HTTP2FrameParser = @import("http2_frame.zig").HTTP2FrameParser;
 pub const HTTP2FrameType = @import("http2_frame.zig").FrameType;
 pub const HTTP2Frame = @import("http2_frame.zig").Frame;
+pub const HTTP2_MAX_FRAME_SIZE = @import("http2_frame.zig").MAX_FRAME_SIZE;
 pub const HTTP2FrameHeader = @import("http2_frame.zig").FrameHeader;
 pub const HTTP2FrameError = @import("http2_frame.zig").FrameError;
 pub const HTTP2SettingsParameter = @import("http2_frame.zig").SettingsParameter;

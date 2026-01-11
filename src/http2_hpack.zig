@@ -359,9 +359,7 @@ pub const HPACKDecoder = struct {
 
     /// Decode a string (with or without Huffman)
     fn decodeString(input: []const u8) !DecodeStringResult {
-        // Preconditions
-        std.debug.assert(input.len > 0);
-
+        // Validate input length - return error for empty input
         if (input.len < 1) return HPACKError.InvalidEncoding;
 
         const first_byte = input[0];

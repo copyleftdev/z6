@@ -1,0 +1,77 @@
+{
+  "$schema": "https://claude.ai/schemas/claude-code-settings.json",
+  "projectName": "z6",
+  "description": "Deterministic load testing tool built with Tiger Style",
+
+  "codeStyle": {
+    "language": "zig",
+    "formatter": "zig fmt",
+    "indentation": "spaces",
+    "indentSize": 4
+  },
+
+  "testing": {
+    "command": "zig build test",
+    "coverage": {
+      "target": 90,
+      "enforce": true
+    },
+    "directories": [
+      "tests/unit",
+      "tests/integration",
+      "tests/fuzz"
+    ]
+  },
+
+  "git": {
+    "branchPrefix": {
+      "feature": "feat/TASK-",
+      "bugfix": "fix/TASK-",
+      "docs": "docs/TASK-",
+      "refactor": "refactor/TASK-",
+      "test": "test/TASK-"
+    },
+    "commitFormat": "conventional",
+    "requireIssueReference": true,
+    "mainBranch": "main"
+  },
+
+  "qualityGates": {
+    "preCommit": {
+      "formatCheck": true,
+      "assertionDensity": 2,
+      "boundedLoops": true,
+      "explicitErrors": true,
+      "buildPass": true,
+      "testsPass": true
+    }
+  },
+
+  "boundaries": {
+    "maxVirtualUsers": 100000,
+    "maxEvents": 10000000,
+    "maxMemoryGB": 16,
+    "eventSizeBytes": 272
+  },
+
+  "documentation": {
+    "manifestoPath": "docs/MANIFESTO.md",
+    "roadmapPath": "ROADMAP.md",
+    "architecturePath": "docs/ARCHITECTURE.md"
+  },
+
+  "issueTracking": {
+    "provider": "github",
+    "labelPrefix": "TASK-",
+    "phases": [
+      { "name": "Phase 0", "label": "phase-0", "status": "complete" },
+      { "name": "Phase 1", "label": "phase-1", "status": "complete" },
+      { "name": "Phase 2", "label": "phase-2", "status": "complete" },
+      { "name": "Phase 3", "label": "phase-3", "status": "complete" },
+      { "name": "Phase 4", "label": "phase-4", "status": "in-progress" },
+      { "name": "Phase 5", "label": "phase-5", "status": "pending" },
+      { "name": "Phase 6", "label": "phase-6", "status": "pending" },
+      { "name": "Phase 7", "label": "phase-7", "status": "pending" }
+    ]
+  }
+}

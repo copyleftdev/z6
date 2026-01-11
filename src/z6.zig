@@ -126,3 +126,16 @@ pub const DEFAULT_THINK_TIME_TICKS = @import("vu_engine.zig").DEFAULT_THINK_TIME
 // HDR Histogram
 pub const HdrHistogram = @import("hdr_histogram.zig").HdrHistogram;
 pub const HdrError = @import("hdr_histogram.zig").HdrError;
+
+// Metrics Reducer
+pub const MetricsReducer = @import("metrics.zig").MetricsReducer;
+pub const Metrics = @import("metrics.zig").Metrics;
+pub const RequestMetrics = @import("metrics.zig").RequestMetrics;
+pub const LatencyMetrics = @import("metrics.zig").LatencyMetrics;
+pub const ThroughputMetrics = @import("metrics.zig").ThroughputMetrics;
+pub const ConnectionMetrics = @import("metrics.zig").ConnectionMetrics;
+pub const ErrorMetrics = @import("metrics.zig").ErrorMetrics;
+pub const RequestPayload = @import("metrics.zig").RequestPayload;
+pub const ResponsePayload = @import("metrics.zig").ResponsePayload;
+pub const ConnectionPayload = @import("metrics.zig").ConnectionPayload;
+pub const reduce = @import("metrics.zig").reduce;

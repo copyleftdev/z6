@@ -37,7 +37,7 @@ Thumbs.db
 results/
 test_results/
 *.log
-!firebase-debug.log
+firebase-debug.log
 
 # Fuzz artifacts
 fuzz-*.log

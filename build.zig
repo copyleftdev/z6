@@ -253,6 +253,30 @@ pub fn build(b: *std.Build) void {
     const run_vu_engine_tests = b.addRunArtifact(vu_engine_tests);
     test_step.dependOn(&run_vu_engine_tests.step);
 
+    // HTTP/2 HPACK tests
+    const http2_hpack_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/http2_hpack_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    http2_hpack_tests.root_module.addImport("z6", z6_module);
+    const run_http2_hpack_tests = b.addRunArtifact(http2_hpack_tests);
+    test_step.dependOn(&run_http2_hpack_tests.step);
+
+    // HTTP/2 Handler tests
+    const http2_handler_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/http2_handler_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    http2_handler_tests.root_module.addImport("z6", z6_module);
+    const run_http2_handler_tests = b.addRunArtifact(http2_handler_tests);
+    test_step.dependOn(&run_http2_handler_tests.step);
+
     // Integration tests
     const integration_test_step = b.step("test-integration", "Run integration tests");
 

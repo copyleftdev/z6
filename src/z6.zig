@@ -89,6 +89,32 @@ pub const HTTP2ContinuationPayload = @import("http2_frame.zig").ContinuationPayl
 pub const HTTP2ErrorCode = @import("http2_frame.zig").ErrorCode;
 pub const HTTP2_CONNECTION_PREFACE = @import("http2_frame.zig").CONNECTION_PREFACE;
 
+// HTTP/2 Frame Serialization
+pub const HTTP2Settings = @import("http2_frame.zig").Settings;
+pub const serializeFrameHeader = @import("http2_frame.zig").serializeFrameHeader;
+pub const serializeSettingsFrame = @import("http2_frame.zig").serializeSettingsFrame;
+pub const serializeSettingsAck = @import("http2_frame.zig").serializeSettingsAck;
+pub const serializeDataFrame = @import("http2_frame.zig").serializeDataFrame;
+pub const serializeHeadersFrame = @import("http2_frame.zig").serializeHeadersFrame;
+pub const serializePingFrame = @import("http2_frame.zig").serializePingFrame;
+pub const serializeWindowUpdateFrame = @import("http2_frame.zig").serializeWindowUpdateFrame;
+pub const serializeGoawayFrame = @import("http2_frame.zig").serializeGoawayFrame;
+pub const serializeRstStreamFrame = @import("http2_frame.zig").serializeRstStreamFrame;
+
+// HPACK Header Compression
+pub const HPACKEncoder = @import("http2_hpack.zig").HPACKEncoder;
+pub const HPACKDecoder = @import("http2_hpack.zig").HPACKDecoder;
+pub const HPACKHeader = @import("http2_hpack.zig").Header;
+pub const HPACKError = @import("http2_hpack.zig").HPACKError;
+pub const encodeRequestHeaders = @import("http2_hpack.zig").encodeRequestHeaders;
+
+// HTTP/2 Handler
+pub const HTTP2Handler = @import("http2_handler.zig").HTTP2Handler;
+pub const HTTP2Error = @import("http2_handler.zig").HTTP2Error;
+pub const createHTTP2Handler = @import("http2_handler.zig").createHandler;
+pub const HTTP2_MAX_CONNECTIONS = @import("http2_handler.zig").MAX_CONNECTIONS;
+pub const HTTP2_MAX_STREAMS = @import("http2_handler.zig").MAX_STREAMS;
+
 // VU Execution Engine
 pub const VUEngine = @import("vu_engine.zig").VUEngine;
 pub const EngineConfig = @import("vu_engine.zig").EngineConfig;

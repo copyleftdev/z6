@@ -73,3 +73,18 @@ pub const formatJSON = @import("output.zig").formatJSON;
 pub const formatCSV = @import("output.zig").formatCSV;
 pub const formatCSVHeader = @import("output.zig").formatCSVHeader;
 pub const formatSummary = @import("output.zig").formatSummary;
+
+// HTTP/2 Frame Parser
+pub const HTTP2FrameParser = @import("http2_frame.zig").HTTP2FrameParser;
+pub const HTTP2FrameType = @import("http2_frame.zig").FrameType;
+pub const HTTP2Frame = @import("http2_frame.zig").Frame;
+pub const HTTP2FrameHeader = @import("http2_frame.zig").FrameHeader;
+pub const HTTP2FrameError = @import("http2_frame.zig").FrameError;
+pub const HTTP2SettingsParameter = @import("http2_frame.zig").SettingsParameter;
+pub const HTTP2FrameFlags = @import("http2_frame.zig").FrameFlags;
+pub const HTTP2PriorityPayload = @import("http2_frame.zig").PriorityPayload;
+pub const HTTP2GoawayPayload = @import("http2_frame.zig").GoawayPayload;
+pub const HTTP2HeadersPayload = @import("http2_frame.zig").HeadersPayload;
+pub const HTTP2ContinuationPayload = @import("http2_frame.zig").ContinuationPayload;
+pub const HTTP2ErrorCode = @import("http2_frame.zig").ErrorCode;
+pub const HTTP2_CONNECTION_PREFACE = @import("http2_frame.zig").CONNECTION_PREFACE;

@@ -289,6 +289,18 @@ pub fn build(b: *std.Build) void {
     const run_hdr_histogram_tests = b.addRunArtifact(hdr_histogram_tests);
     test_step.dependOn(&run_hdr_histogram_tests.step);
 
+    // Metrics Reducer tests
+    const metrics_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit/metrics_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    metrics_tests.root_module.addImport("z6", z6_module);
+    const run_metrics_tests = b.addRunArtifact(metrics_tests);
+    test_step.dependOn(&run_metrics_tests.step);
+
     // Integration tests
     const integration_test_step = b.step("test-integration", "Run integration tests");
 
